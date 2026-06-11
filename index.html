@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>จองที่พัก</title>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&family=Inter:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    /* ─── Token System ──────────────────────────────────────── */
+    :root {
+      --sage:       #4a7c59;
+      --sage-light: #6a9e78;
+      --sage-pale:  #e8f0ea;
+      --sage-dim:   #d0e3d5;
+      --cream:      #f7f5f0;
+      --white:      #ffffff;
+      --walnut:     #7a5c40;
+      --walnut-dim: #c4a882;
+      --stone:      #6b7280;
+      --stone-light:#9ca3af;
+      --stone-pale: #f3f4f6;
+      --ink:        #1f2937;
+      --ink-soft:   #374151;
+      --border:     #e5e7eb;
+      --shadow:     rgba(0,0,0,0.06);
+      --radius:     14px;
+      --radius-sm:  8px;
+    }
+
+    /* ─── Reset ─────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; -webkit-text-size-adjust: 100%; }
+    body {
+      font-family: 'Kanit', 'Inter', sans-serif;
+      background: var(--cream);
+      color: var(--ink);
+      min-height: 100vh;
+      padding-bottom: 40px;
+    }
+
+    /* ─── Header ─────────────────────────────────────────────── */
+    .header {
+      background: var(--sage);
+      padding: 20px 20px 28px;
+      position: relative;
+      overflow: hidden;
+    }
+    .header::after {
+      content: '';
+      position: absolute;
+      bottom: -18px; left: 0; right: 0;
+      height: 36px;
+      background: var(--cream);
+      border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+    }
+    .header-inner { position: relative; z-index: 1; }
+    .header-label {
+      font-size: 11px;
+      font-weight: 400;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--sage-dim);
+      margin-bottom: 6px;
+    }
+    .header-title {
+      font-size: 26px;
+      font-weight: 600;
+      color: var(--white);
+      line-height: 1.2;
+    }
+    .header-sub {
+      font-size: 13px;
+      font-weight: 300;
+      color: var(--sage-dim);
+      margin-top: 4px;
+    }
+    .profile-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .profile-avatar {
+      width: 38px; height: 38px;
+      border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.4);
+      background: var(--sage-light);
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .profile-name {
+      font-size: 13px;
+      font-weight: 400;
+      color: var(--sage-pale);
+    }
+
+    /* ─── Main ───────────────────────────────────────────────── */
+    .main { padding: 24px 18px 0; }
+
+    /* ─── Section Label ──────────────────────────────────────── */
+    .section-label {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--stone);
+      margin-bottom: 10px;
+    }
+
+    /* ─── Calendar Card ──────────────────────────────────────── */
+    .card {
+      background: var(--white);
+      border-radius: var(--radius);
+      box-shadow: 0 1px 6px var(--shadow), 0 0 0 1px var(--border);
+      overflow: hidden;
+      margin-bottom: 18px;
+    }
+
+    .date-range-row {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      padding: 14px 16px;
+      gap: 8px;
+    }
+    .date-box { text-align: center; }
+    .date-box-label {
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--stone-light);
+      margin-bottom: 2px;
+    }
+    .date-box-value {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--sage);
+      line-height: 1;
+    }
+    .date-box-day {
+      font-size: 11px;
+      color: var(--stone);
+      margin-top: 2px;
+    }
+    .date-arrow {
+      color: var(--walnut-dim);
+      font-size: 18px;
+      text-align: center;
+    }
+    .nights-pill {
+      text-align: center;
+      padding: 4px 12px;
+      background: var(--sage-pale);
+      border-radius: 99px;
+      font-size: 12px;
+      color: var(--sage);
+      font-weight: 500;
+      margin: 0 16px 14px;
+    }
+
+    /* Calendar */
+    .cal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 16px 6px;
+      border-top: 1px solid var(--border);
+    }
+    .cal-month {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--ink);
+    }
+    .cal-nav {
+      background: none;
+      border: none;
+      cursor: pointer;
+      width: 30px; height: 30px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--stone);
+      font-size: 16px;
+      transition: background 0.15s;
+    }
+    .cal-nav:hover { background: var(--stone-pale); }
+    .cal-grid { padding: 6px 10px 14px; }
+    .cal-dow {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      text-align: center;
+      margin-bottom: 4px;
+    }
+    .cal-dow span {
+      font-size: 10px;
+      font-weight: 500;
+      color: var(--stone-light);
+      padding: 4px 0;
+    }
+    .cal-days {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 2px;
+    }
+    .cal-day {
+      aspect-ratio: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: background 0.12s, color 0.12s;
+      color: var(--ink-soft);
+      -webkit-tap-highlight-color: transparent;
+    }
+    .cal-day:hover:not(.disabled):not(.empty) { background: var(--sage-pale); }
+    .cal-day.disabled { color: var(--border); cursor: default; }
+    .cal-day.empty { cursor: default; }
+    .cal-day.in-range { background: var(--sage-pale); border-radius: 0; }
+    .cal-day.range-start,
+    .cal-day.range-end {
+      background: var(--sage);
+      color: var(--white);
+      font-weight: 600;
+      border-radius: var(--radius-sm);
+    }
+    .cal-day.range-start.in-range { border-radius: var(--radius-sm) 0 0 var(--radius-sm); }
+    .cal-day.range-end.in-range  { border-radius: 0 var(--radius-sm) var(--radius-sm) 0; }
+    .cal-day.today {
+      font-weight: 600;
+      color: var(--walnut);
+    }
+    .cal-day.today:not(.range-start):not(.range-end)::after {
+      content: '';
+      position: absolute;
+      bottom: 3px;
+      width: 4px; height: 4px;
+      background: var(--walnut);
+      border-radius: 50%;
+    }
+    .cal-day.today { position: relative; }
+
+    /* ─── Room Cards ─────────────────────────────────────────── */
+    .rooms-grid { display: flex; flex-direction: column; gap: 12px; margin-bottom: 18px; }
+    .room-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      box-shadow: 0 1px 6px var(--shadow), 0 0 0 1px var(--border);
+      padding: 16px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      cursor: pointer;
+      transition: box-shadow 0.15s, border-color 0.15s;
+      -webkit-tap-highlight-color: transparent;
+      border: 2px solid transparent;
+    }
+    .room-card.selected {
+      border-color: var(--sage);
+      box-shadow: 0 0 0 3px var(--sage-pale);
+    }
+    .room-icon {
+      width: 52px; height: 52px;
+      border-radius: var(--radius-sm);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px;
+      flex-shrink: 0;
+    }
+    .room-icon.small  { background: var(--sage-pale); }
+    .room-icon.medium { background: #fef3e2; }
+    .room-icon.large  { background: #f0f0ff; }
+    .room-info { flex: 1; }
+    .room-name { font-size: 15px; font-weight: 600; color: var(--ink); }
+    .room-sub  { font-size: 12px; color: var(--stone); margin-top: 2px; }
+    .room-avail {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--sage);
+      background: var(--sage-pale);
+      padding: 2px 8px;
+      border-radius: 99px;
+      margin-top: 4px;
+      display: inline-block;
+    }
+    .room-check {
+      width: 24px; height: 24px;
+      border-radius: 50%;
+      border: 2px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      transition: all 0.15s;
+    }
+    .room-card.selected .room-check {
+      background: var(--sage);
+      border-color: var(--sage);
+      color: white;
+    }
+
+    /* Quantity selector */
+    .qty-row {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      margin-top: 8px;
+    }
+    .qty-btn {
+      width: 28px; height: 28px;
+      border: 1.5px solid var(--border);
+      background: var(--white);
+      color: var(--stone);
+      font-size: 18px;
+      cursor: pointer;
+      border-radius: var(--radius-sm);
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.12s;
+      line-height: 1;
+    }
+    .qty-btn:active { background: var(--stone-pale); }
+    .qty-val {
+      min-width: 36px;
+      text-align: center;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--ink);
+      padding: 0 6px;
+    }
+    .qty-label { font-size: 11px; color: var(--stone); margin-left: 8px; }
+
+    /* ─── Guest Name ─────────────────────────────────────────── */
+    .input-wrap { margin-bottom: 18px; }
+    .input-field {
+      width: 100%;
+      padding: 13px 14px;
+      font-family: 'Kanit', sans-serif;
+      font-size: 15px;
+      color: var(--ink);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--white);
+      outline: none;
+      transition: border-color 0.15s;
+      -webkit-appearance: none;
+    }
+    .input-field:focus { border-color: var(--sage); }
+    .input-field::placeholder { color: var(--stone-light); }
+    textarea.input-field { resize: none; line-height: 1.5; }
+
+    /* ─── Summary Strip ──────────────────────────────────────── */
+    .summary-strip {
+      background: var(--sage-pale);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      margin-bottom: 20px;
+    }
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      color: var(--ink-soft);
+      padding: 3px 0;
+    }
+    .summary-row.total {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--sage);
+      border-top: 1px solid var(--sage-dim);
+      margin-top: 6px;
+      padding-top: 8px;
+    }
+
+    /* ─── Book Button ─────────────────────────────────────────── */
+    .btn-book {
+      width: 100%;
+      padding: 16px;
+      background: var(--sage);
+      color: var(--white);
+      font-family: 'Kanit', sans-serif;
+      font-size: 16px;
+      font-weight: 600;
+      border: none;
+      border-radius: var(--radius);
+      cursor: pointer;
+      letter-spacing: 0.03em;
+      transition: background 0.15s, transform 0.1s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn-book:active { background: #3d6b4a; transform: scale(0.98); }
+    .btn-book:disabled { background: var(--stone-light); cursor: default; }
+
+    /* ─── Toast ──────────────────────────────────────────────── */
+    .toast {
+      position: fixed;
+      bottom: 24px; left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--ink);
+      color: var(--white);
+      padding: 12px 22px;
+      border-radius: 99px;
+      font-size: 13px;
+      font-weight: 500;
+      z-index: 999;
+      transition: transform 0.3s ease;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+    .toast.success { background: var(--sage); }
+    .toast.error   { background: #dc2626; }
+
+    /* ─── Loading overlay ────────────────────────────────────── */
+    .overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.35);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 998;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.2s;
+    }
+    .overlay.show { opacity: 1; pointer-events: all; }
+    .spinner {
+      width: 44px; height: 44px;
+      border: 3px solid rgba(255,255,255,0.3);
+      border-top-color: var(--white);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ─── Divider ─────────────────────────────────────────────── */
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 0 0 18px;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <div class="header-inner">
+    <div class="profile-row">
+      <div class="profile-avatar" id="avatarWrap">
+        <svg viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="19" cy="15" r="7" fill="rgba(255,255,255,0.5)"/>
+          <ellipse cx="19" cy="32" rx="11" ry="7" fill="rgba(255,255,255,0.5)"/>
+        </svg>
+      </div>
+      <span class="profile-name" id="profileName">กำลังโหลด…</span>
+    </div>
+    <div class="header-label">Hostel Booking</div>
+    <div class="header-title">จองที่พัก</div>
+    <div class="header-sub">เลือกวันและห้องพักที่ต้องการ</div>
+  </div>
+</div>
+
+<!-- Main Content -->
+<div class="main">
+
+  <!-- Date Selection -->
+  <div class="section-label">วันเช็กอิน – เช็กเอาต์</div>
+  <div class="card">
+    <!-- Selected range display -->
+    <div class="date-range-row">
+      <div class="date-box">
+        <div class="date-box-label">เช็กอิน</div>
+        <div class="date-box-value" id="checkInDisplay">—</div>
+        <div class="date-box-day" id="checkInDay"></div>
+      </div>
+      <div class="date-arrow">→</div>
+      <div class="date-box">
+        <div class="date-box-label">เช็กเอาต์</div>
+        <div class="date-box-value" id="checkOutDisplay">—</div>
+        <div class="date-box-day" id="checkOutDay"></div>
+      </div>
+    </div>
+    <div class="nights-pill" id="nightsPill">แตะวันที่เพื่อเลือก</div>
+
+    <!-- Calendar -->
+    <div class="cal-header">
+      <button class="cal-nav" id="prevBtn">‹</button>
+      <span class="cal-month" id="calMonth"></span>
+      <button class="cal-nav" id="nextBtn">›</button>
+    </div>
+    <div class="cal-grid">
+      <div class="cal-dow">
+        <span>อา</span><span>จ</span><span>อ</span><span>พ</span><span>พฤ</span><span>ศ</span><span>ส</span>
+      </div>
+      <div class="cal-days" id="calDays"></div>
+    </div>
+  </div>
+
+  <!-- Room Selection -->
+  <div class="section-label">ประเภทห้องพัก</div>
+  <div class="rooms-grid">
+
+    <!-- Small Room -->
+    <div class="room-card" id="roomSmall" onclick="selectRoom('small')">
+      <div class="room-icon small">🛏️</div>
+      <div class="room-info">
+        <div class="room-name">ห้องเล็ก (Small Room)</div>
+        <div class="room-sub">สำหรับ 2 คน</div>
+        <div class="room-avail">มีทั้งหมด 12 ห้อง</div>
+        <div class="qty-row" id="qtySmall" style="display:none">
+          <button class="qty-btn" onclick="event.stopPropagation(); changeQty('small',-1)">−</button>
+          <span class="qty-val" id="qtyValSmall">1</span>
+          <button class="qty-btn" onclick="event.stopPropagation(); changeQty('small',1)">+</button>
+          <span class="qty-label">ห้อง</span>
+        </div>
+      </div>
+      <div class="room-check" id="checkSmall">
+        <svg width="12" height="9" viewBox="0 0 12 9" fill="none"><path d="M1 4L4.5 7.5L11 1" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+    </div>
+
+    <!-- Medium House -->
+    <div class="room-card" id="roomMedium" onclick="selectRoom('medium')">
+      <div class="room-icon medium">🏡</div>
+      <div class="room-info">
+        <div class="room-name">บ้านกลาง (Medium House)</div>
+        <div class="room-sub">สำหรับ 4 คน</div>
+        <div class="room-avail">มี 1 หลัง</div>
+      </div>
+      <div class="room-check" id="checkMedium">
+        <svg width="12" height="9" viewBox="0 0 12 9" fill="none"><path d="M1 4L4.5 7.5L11 1" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+    </div>
+
+    <!-- Large House -->
+    <div class="room-card" id="roomLarge" onclick="selectRoom('large')">
+      <div class="room-icon large">🏠</div>
+      <div class="room-info">
+        <div class="room-name">บ้านใหญ่ (Large House)</div>
+        <div class="room-sub">สำหรับ 7 คน</div>
+        <div class="room-avail">มี 1 หลัง</div>
+      </div>
+      <div class="room-check" id="checkLarge">
+        <svg width="12" height="9" viewBox="0 0 12 9" fill="none"><path d="M1 4L4.5 7.5L11 1" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Guest Info -->
+  <div class="section-label">ข้อมูลผู้จอง</div>
+  <div class="input-wrap">
+    <input type="text" class="input-field" id="guestName" placeholder="ชื่อ-นามสกุล ผู้จอง" />
+  </div>
+  <div class="input-wrap">
+    <input type="tel" class="input-field" id="guestPhone" placeholder="เบอร์โทรศัพท์" />
+  </div>
+  <div class="input-wrap">
+    <textarea class="input-field" id="guestNote" rows="2" placeholder="หมายเหตุ (ถ้ามี)"></textarea>
+  </div>
+
+  <!-- Summary -->
+  <div class="summary-strip" id="summaryStrip" style="display:none">
+    <div class="summary-row"><span>ประเภทที่พัก</span><span id="sumRoom">—</span></div>
+    <div class="summary-row"><span>จำนวน</span><span id="sumQty">—</span></div>
+    <div class="summary-row"><span>วันเช็กอิน</span><span id="sumIn">—</span></div>
+    <div class="summary-row"><span>วันเช็กเอาต์</span><span id="sumOut">—</span></div>
+    <div class="summary-row total"><span>จำนวนคืน</span><span id="sumNights">—</span></div>
+  </div>
+
+  <!-- Book Button -->
+  <button class="btn-book" id="bookBtn" onclick="submitBooking()">ยืนยันการจอง</button>
+
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- Loading overlay -->
+<div class="overlay" id="overlay"><div class="spinner"></div></div>
+
+<script>
+/* ─── Constants ─────────────────────────────────────────────── */
+const LIFF_ID = "2010124439-keSKzKOd";
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxIZ6vhxi1eFaWRUZlqfekmH0OahAzaxszVIAVux9Ku41g9sEp17J8ttE9KFImAAnPD/exec";
+
+const ROOM_LABELS = {
+  small:  "ห้องเล็ก (Small Room)",
+  medium: "บ้านกลาง (Medium House)",
+  large:  "บ้านใหญ่ (Large House)"
+};
+const ROOM_MAX = { small: 12, medium: 1, large: 1 };
+const DAYS_TH = ["อา","จ","อ","พ","พฤ","ศ","ส"];
+const MONTHS_TH = ["มกราคม","กุมภาพันธ์","มีนาคม","เมษายน","พฤษภาคม","มิถุนายน","กรกฎาคม","สิงหาคม","กันยายน","ตุลาคม","พฤศจิกายน","ธันวาคม"];
+
+/* ─── State ─────────────────────────────────────────────────── */
+let calYear, calMonth;
+let checkIn  = null;  // Date object
+let checkOut = null;
+let selecting = 'in'; // 'in' | 'out'
+let selectedRoom = null;
+let roomQty = { small: 1, medium: 1, large: 1 };
+let userProfile = {};
+
+/* ─── LIFF Init ─────────────────────────────────────────────── */
+(async () => {
+  try {
+    await liff.init({ liffId: LIFF_ID });
+    if (liff.isLoggedIn()) {
+      const profile = await liff.getProfile();
+      userProfile = profile;
+      document.getElementById('profileName').textContent = profile.displayName || 'ผู้ใช้';
+      const avatarWrap = document.getElementById('avatarWrap');
+      if (profile.pictureUrl) {
+        avatarWrap.innerHTML = `<img src="${profile.pictureUrl}" alt="avatar" />`;
+      }
+    } else {
+      liff.login();
+    }
+  } catch (e) {
+    console.warn('LIFF init failed:', e);
+    document.getElementById('profileName').textContent = 'ผู้ใช้';
+  }
+})();
+
+/* ─── Calendar ──────────────────────────────────────────────── */
+const today = new Date(); today.setHours(0,0,0,0);
+calYear  = today.getFullYear();
+calMonth = today.getMonth();
+
+function renderCal() {
+  document.getElementById('calMonth').textContent = `${MONTHS_TH[calMonth]} ${calYear + 543}`;
+  const firstDay = new Date(calYear, calMonth, 1).getDay();
+  const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+  const grid = document.getElementById('calDays');
+  grid.innerHTML = '';
+
+  for (let i = 0; i < firstDay; i++) {
+    const el = document.createElement('div');
+    el.className = 'cal-day empty';
+    grid.appendChild(el);
+  }
+
+  for (let d = 1; d <= daysInMonth; d++) {
+    const date = new Date(calYear, calMonth, d);
+    const el = document.createElement('div');
+    el.className = 'cal-day';
+    el.textContent = d;
+
+    if (date < today) {
+      el.classList.add('disabled');
+    } else {
+      if (sameDay(date, today)) el.classList.add('today');
+      if (checkIn  && sameDay(date, checkIn))  { el.classList.add('range-start'); }
+      if (checkOut && sameDay(date, checkOut)) { el.classList.add('range-end'); }
+      if (checkIn && checkOut && date > checkIn && date < checkOut) el.classList.add('in-range');
+
+      el.addEventListener('click', () => pickDate(date));
+    }
+    grid.appendChild(el);
+  }
+}
+
+function pickDate(date) {
+  if (selecting === 'in' || (checkIn && checkOut)) {
+    checkIn  = date;
+    checkOut = null;
+    selecting = 'out';
+  } else {
+    if (date <= checkIn) {
+      checkIn  = date;
+      checkOut = null;
+      selecting = 'out';
+    } else {
+      checkOut = date;
+      selecting = 'in';
+    }
+  }
+  updateDateDisplay();
+  renderCal();
+  updateSummary();
+}
+
+function sameDay(a, b) {
+  return a.getFullYear() === b.getFullYear() &&
+         a.getMonth()    === b.getMonth()    &&
+         a.getDate()     === b.getDate();
+}
+
+function formatDate(d) {
+  return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()+543}`;
+}
+function formatDateShort(d) {
+  return `${d.getDate()} ${MONTHS_TH[d.getMonth()].slice(0,3)}.`;
+}
+function dayLabel(d) {
+  return `${DAYS_TH[d.getDay()]} ${d.getDate()} ${MONTHS_TH[d.getMonth()].slice(0,3)}.`;
+}
+function nightsDiff(a, b) {
+  return Math.round((b - a) / 86400000);
+}
+
+function updateDateDisplay() {
+  if (checkIn) {
+    document.getElementById('checkInDisplay').textContent  = formatDateShort(checkIn);
+    document.getElementById('checkInDay').textContent      = dayLabel(checkIn);
+  } else {
+    document.getElementById('checkInDisplay').textContent  = '—';
+    document.getElementById('checkInDay').textContent      = '';
+  }
+  if (checkOut) {
+    document.getElementById('checkOutDisplay').textContent = formatDateShort(checkOut);
+    document.getElementById('checkOutDay').textContent     = dayLabel(checkOut);
+  } else {
+    document.getElementById('checkOutDisplay').textContent = '—';
+    document.getElementById('checkOutDay').textContent     = '';
+  }
+  if (checkIn && checkOut) {
+    const n = nightsDiff(checkIn, checkOut);
+    document.getElementById('nightsPill').textContent = `${n} คืน`;
+  } else if (checkIn) {
+    document.getElementById('nightsPill').textContent = 'เลือกวันเช็กเอาต์';
+  } else {
+    document.getElementById('nightsPill').textContent = 'แตะวันที่เพื่อเลือก';
+  }
+}
+
+document.getElementById('prevBtn').onclick = () => {
+  calMonth--;
+  if (calMonth < 0) { calMonth = 11; calYear--; }
+  renderCal();
+};
+document.getElementById('nextBtn').onclick = () => {
+  calMonth++;
+  if (calMonth > 11) { calMonth = 0; calYear++; }
+  renderCal();
+};
+
+/* ─── Room Selection ─────────────────────────────────────────── */
+function selectRoom(type) {
+  selectedRoom = (selectedRoom === type) ? null : type;
+  ['small','medium','large'].forEach(t => {
+    const card  = document.getElementById('room' + t.charAt(0).toUpperCase() + t.slice(1));
+    const check = document.getElementById('check' + t.charAt(0).toUpperCase() + t.slice(1));
+    const qty   = document.getElementById('qty'   + t.charAt(0).toUpperCase() + t.slice(1));
+    if (t === selectedRoom) {
+      card.classList.add('selected');
+      check.style.color = 'white';
+      if (t === 'small' && qty) qty.style.display = 'flex';
+    } else {
+      card.classList.remove('selected');
+      check.style.color = '';
+      if (t === 'small' && qty) qty.style.display = 'none';
+    }
+  });
+  updateSummary();
+}
+
+function changeQty(type, delta) {
+  const max = ROOM_MAX[type];
+  roomQty[type] = Math.min(max, Math.max(1, roomQty[type] + delta));
+  document.getElementById('qtyVal' + type.charAt(0).toUpperCase() + type.slice(1)).textContent = roomQty[type];
+  updateSummary();
+}
+
+/* ─── Summary ────────────────────────────────────────────────── */
+function updateSummary() {
+  if (!selectedRoom || !checkIn || !checkOut) {
+    document.getElementById('summaryStrip').style.display = 'none';
+    return;
+  }
+  const qty = selectedRoom === 'small' ? roomQty.small : 1;
+  const n   = nightsDiff(checkIn, checkOut);
+
+  document.getElementById('sumRoom').textContent   = ROOM_LABELS[selectedRoom];
+  document.getElementById('sumQty').textContent    = `${qty} ${selectedRoom === 'small' ? 'ห้อง' : 'หลัง'}`;
+  document.getElementById('sumIn').textContent     = formatDate(checkIn);
+  document.getElementById('sumOut').textContent    = formatDate(checkOut);
+  document.getElementById('sumNights').textContent = `${n} คืน`;
+  document.getElementById('summaryStrip').style.display = 'block';
+}
+
+/* ─── Submit ─────────────────────────────────────────────────── */
+async function submitBooking() {
+  const name  = document.getElementById('guestName').value.trim();
+  const phone = document.getElementById('guestPhone').value.trim();
+  const note  = document.getElementById('guestNote').value.trim();
+
+  if (!checkIn || !checkOut) { showToast('กรุณาเลือกวันเช็กอิน-เช็กเอาต์', 'error'); return; }
+  if (!selectedRoom)          { showToast('กรุณาเลือกประเภทห้องพัก', 'error'); return; }
+  if (!name)                  { showToast('กรุณากรอกชื่อผู้จอง', 'error'); return; }
+  if (!phone)                 { showToast('กรุณากรอกเบอร์โทรศัพท์', 'error'); return; }
+
+  const qty = selectedRoom === 'small' ? roomQty.small : 1;
+  const nights = nightsDiff(checkIn, checkOut);
+
+  const payload = {
+    userId:       userProfile.userId      || '',
+    displayName:  userProfile.displayName || name,
+    pictureUrl:   userProfile.pictureUrl  || '',
+    guestName:    name,
+    guestPhone:   phone,
+    note:         note,
+    roomType:     ROOM_LABELS[selectedRoom],
+    roomKey:      selectedRoom,
+    quantity:     qty,
+    checkIn:      formatDate(checkIn),
+    checkOut:     formatDate(checkOut),
+    nights:       nights,
+    timestamp:    new Date().toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' })
+  };
+
+  showOverlay(true);
+  try {
+    const res = await fetch(APPS_SCRIPT_URL, {
+      method:  'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body:    JSON.stringify(payload)
+    });
+    const json = await res.json();
+    showOverlay(false);
+
+    if (json.result === 'success' || json.status === 'ok' || res.ok) {
+      showToast('✅ จองสำเร็จ! เราจะติดต่อกลับเร็วๆ นี้', 'success');
+      // Send confirmation message in LINE chat if possible
+      try {
+        if (liff.isInClient()) {
+          await liff.sendMessages([{
+            type: 'text',
+            text: `📋 สรุปการจอง\n\n🏠 ${ROOM_LABELS[selectedRoom]} × ${qty}\n📅 ${formatDate(checkIn)} → ${formatDate(checkOut)} (${nights} คืน)\n👤 ${name}\n📞 ${phone}`
+          }]);
+        }
+      } catch(e) { /* sendMessages may fail outside LINE */ }
+      resetForm();
+    } else {
+      showToast('เกิดข้อผิดพลาด กรุณาลองใหม่', 'error');
+    }
+  } catch (e) {
+    showOverlay(false);
+    showToast('ไม่สามารถเชื่อมต่อได้ กรุณาลองใหม่', 'error');
+    console.error(e);
+  }
+}
+
+function resetForm() {
+  checkIn = null; checkOut = null; selecting = 'in';
+  selectedRoom = null;
+  roomQty = { small: 1, medium: 1, large: 1 };
+  ['Small','Medium','Large'].forEach(t => {
+    document.getElementById('room'+t).classList.remove('selected');
+    document.getElementById('check'+t).style.color = '';
+  });
+  document.getElementById('qtySmall').style.display = 'none';
+  document.getElementById('qtyValSmall').textContent = '1';
+  document.getElementById('guestName').value  = '';
+  document.getElementById('guestPhone').value = '';
+  document.getElementById('guestNote').value  = '';
+  document.getElementById('summaryStrip').style.display = 'none';
+  updateDateDisplay();
+  renderCal();
+}
+
+/* ─── UI Helpers ─────────────────────────────────────────────── */
+function showToast(msg, type = '') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = `toast ${type} show`;
+  setTimeout(() => { el.className = `toast ${type}`; }, 3200);
+}
+function showOverlay(show) {
+  document.getElementById('overlay').classList.toggle('show', show);
+  document.getElementById('bookBtn').disabled = show;
+}
+
+/* ─── Init ───────────────────────────────────────────────────── */
+renderCal();
+</script>
+</body>
+</html>
